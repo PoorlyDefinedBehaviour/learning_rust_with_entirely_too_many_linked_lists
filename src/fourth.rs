@@ -1,5 +1,5 @@
 use std::{
-  cell::{Ref, RefCell},
+  cell::{Ref, RefCell, RefMut},
   rc::Rc,
 };
 
@@ -83,6 +83,61 @@ impl<T> List<T> {
       .as_ref()
       .map(|node| Ref::map(node.borrow(), |node| &node.elem))
   }
+
+  pub fn peek_front_mut(&mut self) -> Option<RefMut<T>> {
+    self
+      .head
+      .as_ref()
+      .map(|node| RefMut::map(node.borrow_mut(), |node| &mut node.elem))
+  }
+
+  pub fn push_back(&mut self, elem: T) {
+    let new_tail = Node::new(elem);
+
+    match self.tail.take() {
+      Some(old_tail) => {
+        old_tail.borrow_mut().next = Some(Rc::clone(&new_tail));
+        new_tail.borrow_mut().prev = Some(old_tail);
+        self.tail = Some(new_tail);
+      }
+      None => {
+        self.head = Some(Rc::clone(&new_tail));
+        self.tail = Some(new_tail);
+      }
+    }
+  }
+
+  pub fn pop_back(&mut self) -> Option<T> {
+    let old_tail = self.tail.take()?;
+
+    match old_tail.borrow_mut().prev.take() {
+      Some(new_tail) => {
+        new_tail.borrow_mut().next.take();
+        self.tail = Some(new_tail);
+      }
+      None => {
+        self.head.take();
+      }
+    }
+
+    let node = Rc::try_unwrap(old_tail).ok().unwrap().into_inner();
+
+    Some(node.elem)
+  }
+
+  pub fn peek_back(&self) -> Option<Ref<T>> {
+    self
+      .tail
+      .as_ref()
+      .map(|node| Ref::map(node.borrow(), |node| &node.elem))
+  }
+
+  pub fn peek_back_mut(&mut self) -> Option<RefMut<T>> {
+    self
+      .tail
+      .as_ref()
+      .map(|node| RefMut::map(node.borrow_mut(), |node| &mut node.elem))
+  }
 }
 
 impl<T> Drop for List<T> {
@@ -96,7 +151,7 @@ mod tests {
   use super::*;
 
   #[test]
-  fn smoke() {
+  fn push_front_and_pop_front() {
     let mut list = List::new();
 
     assert_eq!(None, list.pop_front());
@@ -114,7 +169,7 @@ mod tests {
   }
 
   #[test]
-  fn peek_front() {
+  fn push_front_and_peek_front() {
     let mut list = List::new();
 
     assert!(matches!(list.peek_front(), None));
@@ -131,4 +186,6 @@ mod tests {
 
     assert_eq!(3, *list.peek_front().unwrap());
   }
+
+  // NOTE: should test more permutations.
 }
