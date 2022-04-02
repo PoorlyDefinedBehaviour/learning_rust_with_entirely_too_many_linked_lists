@@ -52,4 +52,54 @@ impl<T> List<T> {
       }
     }
   }
+
+  pub fn pop_front(&mut self) -> Option<T> {
+    let head = self.head.take()?;
+
+    // Does the list have more than one element?
+    match head.borrow_mut().next.take() {
+      Some(new_head) => {
+        let _ = new_head.borrow_mut().prev.take();
+        self.head = Some(Rc::clone(&new_head));
+        self.tail = self.head.clone();
+      }
+      None => {
+        // List is empty since we removed the only element it had.
+        let _ = self.tail.take();
+      }
+    }
+
+    let node = Rc::try_unwrap(head).ok().unwrap().into_inner();
+
+    Some(node.elem)
+  }
+}
+
+impl<T> Drop for List<T> {
+  fn drop(&mut self) {
+    while self.pop_front().is_some() {}
+  }
+}
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn smoke() {
+    let mut list = List::new();
+
+    assert_eq!(None, list.pop_front());
+
+    list.push_front(1);
+
+    assert_eq!(Some(1), list.pop_front());
+
+    list.push_front(2);
+    list.push_front(3);
+
+    assert_eq!(Some(3), list.pop_front());
+    assert_eq!(Some(2), list.pop_front());
+    assert_eq!(None, list.pop_front());
+  }
 }
