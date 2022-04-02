@@ -1,21 +1,21 @@
 /// Because List if a struct with a single field, its size is the same as the field.
-pub struct List {
-  head: Link,
+pub struct List<T> {
+  head: Link<T>,
 }
 
-type Link = Option<Box<Node>>;
+type Link<T> = Option<Box<Node<T>>>;
 
-struct Node {
-  elem: i32,
-  next: Link,
+struct Node<T> {
+  elem: T,
+  next: Link<T>,
 }
 
-impl List {
+impl<T> List<T> {
   pub fn new() -> Self {
     Self { head: None }
   }
 
-  pub fn push(&mut self, elem: i32) {
+  pub fn push(&mut self, elem: T) {
     let new_node = Node {
       elem,
       next: self.head.take(),
@@ -24,7 +24,7 @@ impl List {
     self.head = Some(Box::new(new_node));
   }
 
-  pub fn pop(&mut self) -> Option<i32> {
+  pub fn pop(&mut self) -> Option<T> {
     // NOTE: the author suggests we use Option::map here but i think
     // Option::map should be pure and we mutate self.head.
     match self.head.take() {
@@ -38,7 +38,7 @@ impl List {
   }
 }
 
-impl Drop for List {
+impl<T> Drop for List<T> {
   fn drop(&mut self) {
     let mut cur_link = self.head.take();
 
