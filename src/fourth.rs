@@ -27,6 +27,7 @@ impl<T> Node<T> {
 }
 
 impl<T> Default for List<T> {
+  #[inline]
   fn default() -> Self {
     Self::new()
   }
@@ -139,6 +140,7 @@ impl<T> List<T> {
       .map(|node| RefMut::map(node.borrow_mut(), |node| &mut node.elem))
   }
 
+  #[inline]
   pub fn into_iter(self) -> IntoIter<T> {
     IntoIter(self)
   }
@@ -155,8 +157,16 @@ pub struct IntoIter<T>(List<T>);
 impl<T> Iterator for IntoIter<T> {
   type Item = T;
 
+  #[inline]
   fn next(&mut self) -> Option<Self::Item> {
     self.0.pop_front()
+  }
+}
+
+impl<T> DoubleEndedIterator for IntoIter<T> {
+  #[inline]
+  fn next_back(&mut self) -> Option<Self::Item> {
+    self.0.pop_back()
   }
 }
 
@@ -201,5 +211,35 @@ mod tests {
     assert_eq!(3, *list.peek_front().unwrap());
   }
 
-  // NOTE: should test more permutations.
+  #[test]
+  fn into_iter_iterator() {
+    let mut list = List::new();
+
+    list.push_front(1);
+    list.push_front(2);
+    list.push_front(3);
+
+    let mut iter = list.into_iter();
+
+    assert_eq!(Some(3), iter.next());
+    assert_eq!(Some(2), iter.next());
+    assert_eq!(Some(1), iter.next());
+  }
+
+  #[test]
+  fn into_iter_double_ended_iterator() {
+    let mut list = List::new();
+
+    list.push_front(1);
+    list.push_front(2);
+    list.push_front(3);
+
+    let mut iter = list.into_iter();
+
+    assert_eq!(Some(1), iter.next_back());
+    assert_eq!(Some(2), iter.next_back());
+    assert_eq!(Some(3), iter.next_back());
+  }
+
+  // NOTE: should test more permutations. Not going to because i can't be bothered.
 }
