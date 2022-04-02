@@ -36,6 +36,14 @@ impl<T> List<T> {
       }
     }
   }
+
+  pub fn peek(&self) -> Option<&T> {
+    self.head.as_deref().map(|node| &node.elem)
+  }
+
+  pub fn peek_mut(&mut self) -> Option<&mut T> {
+    self.head.as_mut().map(|node| &mut node.elem)
+  }
 }
 
 impl<T> Drop for List<T> {
@@ -72,5 +80,41 @@ mod tests {
     assert_eq!(Some(2), list.pop());
     assert_eq!(Some(3), list.pop());
     assert_eq!(None, list.pop());
+  }
+
+  #[test]
+  fn peek() {
+    let mut list = List::new();
+
+    assert_eq!(None, list.peek());
+
+    list.push(1);
+
+    assert_eq!(Some(&1), list.peek());
+
+    list.push(2);
+
+    assert_eq!(Some(&2), list.peek());
+  }
+
+  #[test]
+  fn peek_mut() {
+    let mut list = List::new();
+
+    assert_eq!(None, list.peek_mut());
+
+    list.push(1);
+
+    assert_eq!(Some(&mut 1), list.peek_mut());
+
+    list.push(2);
+
+    let value = list.peek_mut();
+
+    assert_eq!(Some(&mut 2), value);
+
+    *value.unwrap() = 10;
+
+    assert_eq!(Some(&mut 10), list.peek_mut());
   }
 }
