@@ -45,8 +45,16 @@ impl<T> List<T> {
     self.head.as_mut().map(|node| &mut node.elem)
   }
 
+  // NOTE: should we use the standard IntoIter trait?
   pub fn into_iter(self) -> IntoIter<T> {
     IntoIter(self)
+  }
+
+  // NOTE: should w euse the standard Iter trait?
+  pub fn iter<'a>(&'a self) -> Iter<'a, T> {
+    Iter {
+      next: self.head.as_deref(),
+    }
   }
 }
 
@@ -70,6 +78,20 @@ impl<T> Iterator for IntoIter<T> {
   }
 }
 
+pub struct Iter<'a, T> {
+  next: Option<&'a Node<T>>,
+}
+
+impl<'a, T> Iterator for Iter<'a, T> {
+  type Item = &'a T;
+
+  fn next(&mut self) -> Option<Self::Item> {
+    let node = self.next?;
+    self.next = node.next.as_deref();
+    Some(&node.elem)
+  }
+}
+
 #[cfg(test)]
 mod tests {
   use super::*;
@@ -87,6 +109,22 @@ mod tests {
     assert_eq!(Some(3), iter.next());
     assert_eq!(Some(2), iter.next());
     assert_eq!(Some(1), iter.next());
+    assert_eq!(None, iter.next());
+  }
+
+  #[test]
+  fn iter() {
+    let mut list = List::new();
+
+    list.push(1);
+    list.push(2);
+    list.push(3);
+
+    let mut iter = list.iter();
+
+    assert_eq!(Some(&3), iter.next());
+    assert_eq!(Some(&2), iter.next());
+    assert_eq!(Some(&1), iter.next());
     assert_eq!(None, iter.next());
   }
 
