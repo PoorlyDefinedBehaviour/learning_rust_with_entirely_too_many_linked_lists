@@ -42,7 +42,7 @@ mod tests {
 
       // Swaping the order of these two assignments would make the code work.
       *ref1 += 1; // StackedBorrows = [ref1] (pops ptr2 to get to ref1 to the top)
-      *ptr2 += 2; // StackedBorrows = [ref1] (ptr2 is not a the top of the stack, so that'ss an error)
+      *ptr2 += 2; // StackedBorrows = [ref1] (ptr2 is not a the top of the stack, so that's an error)
 
       println!("{}", data);
     }
